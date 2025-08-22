@@ -1,12 +1,10 @@
 from dotenv import load_dotenv
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
 import stripe
 import os
 
-from databases.my_sql.user_table import User
-from utils.db.connect_to_my_sql import SessionLocal
+from utils.db.connect_to_my_sql import db
 
 # Load environment variables
 load_dotenv()
@@ -21,19 +19,11 @@ stripe.api_key = STRIPE_SECRET_KEY
 # Initialize router
 payment_router = APIRouter()
 
-# Database dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 # Route to create Stripe checkout session
 @payment_router.post("/create-checkout-session")
-async def create_checkout_session(request: Request, db: Session = Depends(get_db)):
+async def create_checkout_session(request: Request):
     user_email = request.query_params.get("email")
-    user = db.query(User).filter(User.email == user_email).first()
+    user = db["users"].find_one({"email": user_email})
 
     if not user:
         return JSONResponse(status_code=404, content={"detail": "User not found"})
@@ -78,14 +68,8 @@ async def stripe_webhook(request: Request):
         customer_email = session_data.get("customer_email")
 
         if customer_email:
-            # Open DB session manually (no Depends here)
-            db = SessionLocal()
-            try:
-                user = db.query(User).filter(User.email == customer_email).first()
-                if user:
-                    user.is_premium = True
-                    db.commit()
-            finally:
-                db.close()
+            user = db["users"].find_one({"email": customer_email})
+            if user:
+                db["users"].update_one({"email": customer_email}, {"$set": {"is_premium": True}})
 
     return JSONResponse(status_code=200, content={"status": "success"})

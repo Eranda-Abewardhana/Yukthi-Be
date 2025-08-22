@@ -1,11 +1,8 @@
 from fastapi import APIRouter, Depends
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from databases.my_sql.user_table import User
-from routes.login_routes import get_db
 from services.auth.auth import get_current_user_jwt
 from tasks.chat_tasks import process_chat
 from agents import InputGuardrailTripwireTriggered
@@ -23,13 +20,11 @@ chat_router = APIRouter()
     }
 )
 async def chat(request_body: RequestBody,
-               email: str = Depends(get_current_user_jwt),
-               db: Session = Depends(get_db)
+               email: str = Depends(get_current_user_jwt)
                ):
     try:
         task = process_chat.delay(request_body.query, email)
         print(f"✅ Task created with ID: {task.id}")
-        user = db.query(User).filter(User.email == email).first()
         result = task.get(timeout=100)
         status = result.get("status")
 
@@ -88,4 +83,3 @@ async def chat(request_body: RequestBody,
                 timestamp=datetime.utcnow()
             ))
         )
-

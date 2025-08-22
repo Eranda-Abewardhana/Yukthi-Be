@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Request, HTTPException
 from starlette.config import Config
 from authlib.integrations.starlette_client import OAuth
 from starlette.responses import JSONResponse, RedirectResponse
@@ -7,22 +7,13 @@ from dotenv import load_dotenv
 from datetime import datetime
 import os
 from data_modals.pydantic_models.response_modals import ErrorResponse
-from utils.db.connect_to_my_sql import SessionLocal
+from utils.db.connect_to_my_sql import db
 from utils.db.user_utils import create_user_if_not_exists
 from utils.jwt.pyjwt import create_jwt
-from sqlalchemy.orm import Session
 
 load_dotenv()
 
 login_router = APIRouter()
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 # Load secrets from .env
@@ -66,7 +57,7 @@ async def login(request: Request):
 
 
 @login_router.get("/auth/callback")
-async def auth_callback(request: Request, db: Session = Depends(get_db)):
+async def auth_callback(request: Request):
     try:
         token_data = await oauth.google.authorize_access_token(request)
         print("Token data:", token_data)
