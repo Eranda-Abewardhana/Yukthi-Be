@@ -1,13 +1,11 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# ✅ MySQL connection string from .env
-DATABASE_URL = os.getenv("DATABASE_URL")  # Example: mysql+pymysql://root:pass@localhost/dbname
+# MongoDB connection string from .env
+DATABASE_URL = os.getenv("DATABASE_URL")  # Example: mongodb://localhost:27017/yukti
 
-# ✅ Create engine and session
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+client = MongoClient(DATABASE_URL)
+db = client.get_default_database()  # This will use 'yukti' as the database name

@@ -3,10 +3,8 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.staticfiles import StaticFiles
-from databases.my_sql.user_table import Base
 from routes.chat_routes import chat_router
 from routes.login_routes import login_router
 from routes.payments_routes import payment_router
@@ -16,8 +14,8 @@ load_dotenv()
 BASE_URL = os.getenv("BASE_URL_ONLY", "http://localhost")
 PORT = int(os.getenv("PORT", 9000))
 
-engine = create_engine(os.getenv("DATABASE_URL"))
-Base.metadata.create_all(engine)
+# Remove SQLAlchemy engine and Base metadata creation (for MySQL)
+
 # ✅ CORS origins
 origins = [
     "*",  # Update this to your frontend URL in production

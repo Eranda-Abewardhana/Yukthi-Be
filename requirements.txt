@@ -9,13 +9,15 @@ Pillow==11.2.1
 pinecone==7.0.2
 pydantic==2.11.5
 python-dotenv==1.1.0
-SQLAlchemy==2.0.41
-swarms==7.8.1
+# SQLAlchemy==2.0.41  # Removed for MongoDB migration
+# swarms==7.8.1
 uvicorn==0.34.3
 llama-index-embeddings-huggingface==0.5.4
 openai-agents==0.0.16
 redis==6.2.0
 celery==5.5.3
-pymysql
+# pymysql  # Removed for MongoDB migration
 PyJWT==2.10.1
 cryptography
+pymongo
+motor

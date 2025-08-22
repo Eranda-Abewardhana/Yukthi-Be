@@ -1,18 +1,16 @@
 version: "3.9"
 services:
-  mysql:
-    image: mysql:8
+  mongo:
+    image: mongo:7
+    restart: always
     environment:
-      MYSQL_DATABASE: yukti
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root123
-      MYSQL_ROOT_PASSWORD: root123
+      MONGO_INITDB_DATABASE: yukti
     ports:
-      - "3306:3306"
+      - "27017:27017"
     volumes:
-      - mysql:/var/lib/mysql
+      - mongo_data:/data/db
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot123"]
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -29,12 +27,12 @@ services:
 
   api:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     env_file:
-      - ./backend/.env.local
+      - .env
     depends_on:
-      mysql:
+      mongo:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -43,15 +41,15 @@ services:
 
   worker:
     build:
-      context: ./backend
+      context: .
       dockerfile: celery.Dockerfile
     env_file:
-      - ./backend/.env.local
+      - .env
     depends_on:
-      mysql:
+      mongo:
         condition: service_healthy
       redis:
         condition: service_healthy
 
 volumes:
-  mysql:
+  mongo_data:
