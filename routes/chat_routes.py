@@ -7,6 +7,7 @@ from services.auth.auth import get_current_user_jwt
 from tasks.chat_tasks import process_chat
 from agents import InputGuardrailTripwireTriggered
 from data_modals.pydantic_models.response_modals import ChatResponse, ErrorResponse, RequestBody
+from utils.db.user_utils import reset_cross_limit_if_expired
 
 load_dotenv()
 
@@ -23,6 +24,7 @@ async def chat(request_body: RequestBody,
                email: str = Depends(get_current_user_jwt)
                ):
     try:
+        user = reset_cross_limit_if_expired(email)
         task = process_chat.delay(request_body.query, email)
         print(f"✅ Task created with ID: {task.id}")
         result = task.get(timeout=100)
@@ -42,7 +44,7 @@ async def chat(request_body: RequestBody,
             return JSONResponse(
                 status_code=429,
                 content=jsonable_encoder(ErrorResponse(
-                    detail=result.get("error", f"User limit is over until {user.expired_at + timedelta(hours=12)}.",),
+                    detail=result.get("error", f"User limit is over until {user['expired_at'] + timedelta(hours=12)}."),
                     status="error",
                     links=[],
                     timestamp=datetime.utcnow()
